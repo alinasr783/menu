@@ -1,0 +1,36 @@
+.restaurant-page {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  background: #0a0a0f;
+  padding: 2rem;
+}
+
+.restaurant-image {
+  width: 94vw; /* إضافة min-width */
+  height: auto; /* جعل الارتفاع يتكيف تلقائيًا */
+  border-radius: 6px;
+  box-shadow: 0 8px 32px rgba(0, 247, 255, 0.1);
+}
+
+.loading, .error {
+  color: #fff;
+  text-align: center;
+  font-size: 1.5rem;
+  padding: 2rem;
+}
+
+.error {
+  color: #ff4444;
+}
+.p-image{
+  width : 100vw;
+  min-height:100vh;
+  color:#0a0a0f;
+  padding:0;
+  margin:0;
+  position:absolute;
+  top:0;
+  left:0;
+}
