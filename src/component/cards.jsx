@@ -21,7 +21,6 @@ const MenuCards = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    alert("Fetching menu data..."); // 2. بداية جلب البيانات
 
     const fetchMenu = async () => {
       try {
@@ -32,14 +31,12 @@ const MenuCards = () => {
 
         if (error) throw error;
 
-        alert("Data fetched successfully"); // 3. عند نجاح جلب البيانات
         setMenuItems(data);
       } catch (err) {
         alert("Fetch error: " + err.message); // 4. عند حدوث خطأ في الجلب
         setError(err.message);
       } finally {
         setLoading(false);
-        alert("Fetching complete"); // 5. عند الانتهاء من جلب البيانات
       }
     };
 
@@ -59,29 +56,27 @@ const MenuCards = () => {
 
       if (error) throw error;
 
-      alert("Item deleted successfully"); // 7. عند نجاح الحذف
-      setMenuItems(prev => prev.filter(item => item.id !== id));
+
+        etMenuItems(prev => prev.filter(item => item.id !== id));
     } catch (err) {
       alert("Delete error: " + err.message); // 8. عند حدوث خطأ في الحذف
     }
   };
 
   const handleEdit = (item) => {
-    alert("Editing item: " + JSON.stringify(item)); // 9. عند الضغط على تعديل
+
     setSelectedItem(item);
     setDialogMode("edit");
     setDialogOpen(true);
   };
 
   const handleAdd = () => {
-    alert("Opening Add Dialog"); // 10. عند الضغط على إضافة
     setSelectedItem(null);
     setDialogMode("add");
     setDialogOpen(true);
   };
 
   const handleUpdate = async (updatedItem) => {
-    alert("Updating item: " + JSON.stringify(updatedItem)); // 11. عند بدء التحديث
 
     try {
       const { error } = await supabase
@@ -91,18 +86,16 @@ const MenuCards = () => {
 
       if (error) throw error;
 
-      alert("Item updated successfully"); // 12. عند نجاح التحديث
-      setMenuItems(prev => 
+
+        setMenuItems(prev => 
         prev.map(item => item.id === selectedItem.id ? {...item, ...updatedItem} : item)
       );
       setDialogOpen(false);
     } catch (err) {
-      alert("Update error: " + err.message); // 13. عند حدوث خطأ في التحديث
     }
   };
 
   const handleViewMenu = (name) => {
-    alert("Navigating to menu: " + name); // 14. عند الضغط على زر العرض
     navigate(`/${name.replace(/\s+/g, '-')}`);
   };
 
