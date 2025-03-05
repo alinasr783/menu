@@ -13,43 +13,40 @@ import "./dialog.css";
 
 export default function XDialog({ open, onClose, onSave, initialData, mode = "add" }) {
   const [name, setName] = useState(initialData?.name || "");
-  const [imageFile, setImageFile] = useState(null);
-  const [imageUrl, setImageUrl] = useState(initialData?.image_url || "");
+  const [imageFiles, setImageFiles] = useState([]);
+  const [imageUrls, setImageUrls] = useState(initialData?.image_urls || []);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (initialData) {
       setName(initialData.name);
-      setImageUrl(initialData.image_url || "");
+      setImageUrls(initialData.image_urls || []);
     }
   }, [initialData]);
 
-  const handleImageUpload = async (file) => {
+  const handleImageUpload = async (files) => {
     try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const uploadedUrls = [];
+      for (const file of files) {
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${Math.random()}.${fileExt}`;
 
-      const { data, error } = await supabase.storage
-        .from("images")
-        .upload(fileName, file);
+        const { data, error } = await supabase.storage
+          .from("images")
+          .upload(fileName, file);
 
-      if (error) {
-        alert(`Image upload failed: ${error.message}`);
-        return null;
+        if (error) {
+          alert(`Image upload failed: ${error.message}`);
+          continue;
+        }
+
+        const { data: publicData } = supabase.storage.from("images").getPublicUrl(fileName);
+        uploadedUrls.push(publicData.publicUrl);
       }
-
-      const { data: publicData } = supabase.storage.from("images").getPublicUrl(fileName);
-      const publicUrl = publicData.publicUrl;
-
-      if (!publicUrl) {
-        alert("Error retrieving image URL!");
-        return null;
-      }
-
-      return publicUrl;
+      return uploadedUrls;
     } catch (error) {
       alert(`Unexpected error: ${error.message}`);
-      return null;
+      return [];
     }
   };
 
@@ -58,19 +55,17 @@ export default function XDialog({ open, onClose, onSave, initialData, mode = "ad
     setLoading(true);
 
     try {
-      let newImageUrl = imageUrl;
+      let newImageUrls = [...imageUrls];
 
-      if (imageFile) {
-        const uploadedUrl = await handleImageUpload(imageFile);
-        if (!uploadedUrl) {
-          alert("Failed to upload image. Stopping form submission.");
-          setLoading(false);
-          return;
-        }
-        newImageUrl = uploadedUrl;
+      if (imageFiles.length > 0) {
+        const uploadedUrls = await handleImageUpload(imageFiles);
+        newImageUrls = [...newImageUrls, ...uploadedUrls];
       }
 
-      const updatedItem = { name, image_url: newImageUrl };
+      const updatedItem = { 
+        name, 
+        image_urls: newImageUrls.filter(url => url) // Remove any undefined/null values
+      };
 
       if (mode === "add") {
         await supabase.from("menu").insert([updatedItem]);
@@ -79,8 +74,8 @@ export default function XDialog({ open, onClose, onSave, initialData, mode = "ad
       }
 
       setName("");
-      setImageFile(null);
-      setImageUrl("");
+      setImageFiles([]);
+      setImageUrls([]);
       onClose();
     } catch (error) {
       alert(`Unexpected error: ${error.message}`);
@@ -89,9 +84,16 @@ export default function XDialog({ open, onClose, onSave, initialData, mode = "ad
     }
   };
 
-  const handleRemoveImage = () => {
-    setImageFile(null);
-    setImageUrl("");
+  const handleRemoveImage = (index) => {
+    const newUrls = [...imageUrls];
+    newUrls.splice(index, 1);
+    setImageUrls(newUrls);
+  };
+
+  const handleRemoveFile = (index) => {
+    const newFiles = [...imageFiles];
+    newFiles.splice(index, 1);
+    setImageFiles(newFiles);
   };
 
   return (
@@ -118,9 +120,10 @@ export default function XDialog({ open, onClose, onSave, initialData, mode = "ad
           <input
             accept="image/*"
             type="file"
-            onChange={(e) => setImageFile(e.target.files[0])}
+            onChange={(e) => setImageFiles([...imageFiles, ...e.target.files])}
             id="xdialog-upload"
             className="xdialog-hidden-input hide"
+            multiple
           />
 
           <label htmlFor="xdialog-upload" className="xdialog-upload-label">
@@ -131,27 +134,43 @@ export default function XDialog({ open, onClose, onSave, initialData, mode = "ad
               className="xdialog-upload-btn"
             >
               <CloudUploadIcon className="xdialog-upload-icon" />
-              Choose Menu Image
+              Choose Menu Images
             </Button>
           </label>
 
-          {(imageFile || imageUrl) && (
-            <div className="image-preview-container">
-              <div className="image-preview-item">
+          <div className="image-preview-container">
+            {imageUrls.map((url, index) => (
+              <div key={`url-${index}`} className="image-preview-item">
                 <img 
-                  src={imageFile ? URL.createObjectURL(imageFile) : imageUrl}
-                  alt="Preview" 
+                  src={url}
+                  alt={`Preview ${index}`}
                   className="xdialog-preview-image"
                 />
                 <button 
                   className="remove-image-btn"
-                  onClick={handleRemoveImage}
+                  onClick={() => handleRemoveImage(index)}
                 >
                   <CloseIcon fontSize="small" />
                 </button>
               </div>
-            </div>
-          )}
+            ))}
+
+            {imageFiles.map((file, index) => (
+              <div key={`file-${index}`} className="image-preview-item">
+                <img 
+                  src={URL.createObjectURL(file)}
+                  alt={`Preview ${index}`}
+                  className="xdialog-preview-image"
+                />
+                <button 
+                  className="remove-image-btn"
+                  onClick={() => handleRemoveFile(index)}
+                >
+                  <CloseIcon fontSize="small" />
+                </button>
+              </div>
+            ))}
+          </div>
 
           <DialogActions className="xdialog-actions">
             <Button onClick={onClose} className="xdialog-cancel-btn">

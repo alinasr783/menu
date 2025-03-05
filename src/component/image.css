@@ -1,10 +1,12 @@
 .restaurant-page {
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  align-items: center;
+  flex-direction: column;
+  gap:10px;
   min-height: 100vh;
   background: #0a0a0f;
   padding: 2rem;
+  justify-content: space-between;
 }
 
 .restaurant-image {

@@ -5,7 +5,7 @@ import './image.css';
 
 const RestaurantPage = () => {
   const { restaurantName } = useParams();
-  const [imageUrl, setImageUrl] = useState('');
+  const [imageUrls, setImageUrls] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -16,14 +16,14 @@ const RestaurantPage = () => {
         
         const { data, error } = await supabase
           .from('menu')
-          .select('image_url')
+          .select('image_urls')
           .eq('name', originalName)
           .single();
 
         if (error) throw error;
         if (!data) throw new Error('Restaurant not found');
         
-        setImageUrl(data.image_url);
+        setImageUrls(data.image_urls);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -40,11 +40,16 @@ const RestaurantPage = () => {
   return (
     <div className="p-image">
     <div className="restaurant-page">
-      <img 
-        src={imageUrl} 
-        alt={restaurantName} 
-        className="restaurant-image"
-      />
+      {imageUrls.map((url, index) =>(
+      <>
+        <img 
+          src={url}
+          key={index}
+          alt={restaurantName} 
+          className="restaurant-image"
+        />
+      </>
+      ))}
     </div>
     </div>
   );

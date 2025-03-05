@@ -128,7 +128,7 @@ const MenuCards = () => {
                 </button>
               </div>
               <div className="card-image">
-                <img src={item.image_url} alt={item.name} />
+                <img src={item.image_urls[0]} alt={item.name} />
                 <div className="card-gradient"></div>
               </div>
               <div className="card-content">
