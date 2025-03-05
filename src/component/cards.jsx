@@ -43,7 +43,6 @@ const MenuCards = () => {
   }, []);
 
   const handleDelete = async (id) => {
-    alert("Deleting menu item with ID: " + id); // 6. عند الضغط على حذف
 
     if (!window.confirm('Are you sure you want to delete this menu?')) return;
 
