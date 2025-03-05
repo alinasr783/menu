@@ -22,7 +22,6 @@ export default function XDialog() {
 
   const handleImageUpload = async (file) => {
     try {
-      alert("Uploading image...");
       const fileExt = file.name.split(".").pop();
       const fileName = `${Math.random()}.${fileExt}`;
 
@@ -43,7 +42,6 @@ export default function XDialog() {
         return null;
       }
 
-      alert(`Image uploaded successfully: ${publicUrl}`);
       return publicUrl;
     } catch (error) {
       alert(`Unexpected error: ${error.message}`);
@@ -54,7 +52,6 @@ export default function XDialog() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    alert("Submitting form...");
 
     try {
       if (!imageFile) {
@@ -70,7 +67,6 @@ export default function XDialog() {
         return;
       }
 
-      alert(`Inserting into database: Name = ${name}, Image URL = ${imageUrl}`);
 
       const { error } = await supabase
         .from("menu")
@@ -82,7 +78,6 @@ export default function XDialog() {
         return;
       }
 
-      alert("Menu added successfully!");
       setName("");
       setImageFile(null);
       handleClose();
