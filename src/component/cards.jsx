@@ -10,7 +10,6 @@ import XDialog from './dialog';
 import './cards.css';
 
 const MenuCards = () => {
-  alert("Component Rendered"); // 1. عند تحميل الكومبوننت
 
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -162,7 +161,6 @@ const MenuCards = () => {
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
         onSave={dialogMode === "edit" ? handleUpdate : (newItem) => {
-          alert("Adding new item: " + JSON.stringify(newItem)); // 15. عند إضافة عنصر جديد
           setMenuItems(prev => [newItem, ...prev]);
           setDialogOpen(false);
         }}
