@@ -1,24 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
-import AddIcon from "@mui/icons-material/Add";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import CircularProgress from "@mui/material/CircularProgress";
+import CloseIcon from "@mui/icons-material/Close";
 import { supabase } from "../lib/supabase";
 import "./dialog.css";
 
-export default function XDialog() {
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
+export default function XDialog({ open, onClose, onSave, initialData, mode = "add" }) {
+  const [name, setName] = useState(initialData?.name || "");
   const [imageFile, setImageFile] = useState(null);
+  const [imageUrl, setImageUrl] = useState(initialData?.image_url || "");
   const [loading, setLoading] = useState(false);
 
-  const handleClickOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  useEffect(() => {
+    if (initialData) {
+      setName(initialData.name);
+      setImageUrl(initialData.image_url || "");
+    }
+  }, [initialData]);
 
   const handleImageUpload = async (file) => {
     try {
@@ -54,33 +58,30 @@ export default function XDialog() {
     setLoading(true);
 
     try {
-      if (!imageFile) {
-        alert("Please select an image");
-        setLoading(false);
-        return;
+      let newImageUrl = imageUrl;
+
+      if (imageFile) {
+        const uploadedUrl = await handleImageUpload(imageFile);
+        if (!uploadedUrl) {
+          alert("Failed to upload image. Stopping form submission.");
+          setLoading(false);
+          return;
+        }
+        newImageUrl = uploadedUrl;
       }
 
-      const imageUrl = await handleImageUpload(imageFile);
-      if (!imageUrl) {
-        alert("Failed to upload image. Stopping form submission.");
-        setLoading(false);
-        return;
-      }
+      const updatedItem = { name, image_url: newImageUrl };
 
-
-      const { error } = await supabase
-        .from("menu")
-        .insert([{ name, image_url: imageUrl }]);
-
-      if (error) {
-        alert(`Database insertion failed: ${error.message}`);
-        setLoading(false);
-        return;
+      if (mode === "add") {
+        await supabase.from("menu").insert([updatedItem]);
+      } else {
+        await onSave(updatedItem);
       }
 
       setName("");
       setImageFile(null);
-      handleClose();
+      setImageUrl("");
+      onClose();
     } catch (error) {
       alert(`Unexpected error: ${error.message}`);
     } finally {
@@ -88,85 +89,89 @@ export default function XDialog() {
     }
   };
 
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImageUrl("");
+  };
+
   return (
-    <div className="xdialog-container">
-      <Button
-        className="xdialog-floating-btn"
-        variant="contained"
-        onClick={handleClickOpen}
-      >
-        <AddIcon className="xdialog-plus-icon" />
-      </Button>
+    <Dialog open={open} onClose={onClose} className="xdialog-main">
+      <DialogTitle className="xdialog-header">
+        <span className="xdialog-title">
+          {mode === "edit" ? "Edit Menu" : "Add New Menu"}
+        </span>
+      </DialogTitle>
 
-      <Dialog open={open} onClose={handleClose} className="xdialog-main">
-        <DialogTitle className="xdialog-header">
-          <span className="xdialog-title">Add New Menu</span>
-        </DialogTitle>
+      <DialogContent className="xdialog-content">
+        <form onSubmit={handleSubmit} className="xdialog-form">
+          <TextField
+            autoFocus
+            fullWidth
+            placeholder="Menu Name"
+            variant="filled"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="xdialog-input"
+            required
+          />
 
-        <DialogContent className="xdialog-content">
-          <form onSubmit={handleSubmit} className="xdialog-form">
-            <TextField
-              autoFocus
+          <input
+            accept="image/*"
+            type="file"
+            onChange={(e) => setImageFile(e.target.files[0])}
+            id="xdialog-upload"
+            className="xdialog-hidden-input hide"
+          />
+
+          <label htmlFor="xdialog-upload" className="xdialog-upload-label">
+            <Button 
+              variant="outlined" 
+              component="span"
               fullWidth
-              placeholder="Menu Name"
-              variant="filled"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="xdialog-input"
-              required
-            />
+              className="xdialog-upload-btn"
+            >
+              <CloudUploadIcon className="xdialog-upload-icon" />
+              Choose Menu Image
+            </Button>
+          </label>
 
-            <input
-              accept="image/*"
-              type="file"
-              onChange={(e) => setImageFile(e.target.files[0])}
-              id="xdialog-upload"
-              className="xdialog-hidden-input hide"
-              required
-            />
-
-            <label htmlFor="xdialog-upload" className="xdialog-upload-label">
-              <Button 
-                variant="outlined" 
-                component="span"
-                fullWidth
-                className="xdialog-upload-btn"
-              >
-                <CloudUploadIcon className="xdialog-upload-icon" />
-                Choose Menu Image
-              </Button>
-            </label>
-
-            {imageFile && (
-              <div className="xdialog-preview">
+          {(imageFile || imageUrl) && (
+            <div className="image-preview-container">
+              <div className="image-preview-item">
                 <img 
-                  src={URL.createObjectURL(imageFile)} 
+                  src={imageFile ? URL.createObjectURL(imageFile) : imageUrl}
                   alt="Preview" 
                   className="xdialog-preview-image"
                 />
+                <button 
+                  className="remove-image-btn"
+                  onClick={handleRemoveImage}
+                >
+                  <CloseIcon fontSize="small" />
+                </button>
               </div>
-            )}
+            </div>
+          )}
 
-            <DialogActions className="xdialog-actions">
-              <Button onClick={handleClose} className="xdialog-cancel-btn">
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                variant="contained" 
-                disabled={loading}
-                className="xdialog-submit-btn"
-              >
-                {loading ? (
-                  <CircularProgress size={24} className="xdialog-spinner" />
-                ) : (
-                  'Save Changes'
-                )}
-              </Button>
-            </DialogActions>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </div>
+          <DialogActions className="xdialog-actions">
+            <Button onClick={onClose} className="xdialog-cancel-btn">
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              variant="contained" 
+              disabled={loading}
+              className="xdialog-submit-btn"
+            >
+              {loading ? (
+                <CircularProgress size={24} className="xdialog-spinner" />
+              ) : (
+                mode === "edit" ? "Update" : "Save Changes"
+              )}
+            </Button>
+          </DialogActions>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

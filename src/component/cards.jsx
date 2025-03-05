@@ -1,22 +1,28 @@
-// components/MenuCards.jsx
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import Skeleton from '@mui/material/Skeleton';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import XDialog from './dialog';
+import AddIcon from '@mui/icons-material/Add';
+import Button from '@mui/material/Button';
 import { useNavigate } from 'react-router-dom';
+import XDialog from './dialog';
 import './cards.css';
 
 const MenuCards = () => {
+  alert("Component Rendered"); // 1. عند تحميل الكومبوننت
+
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState("add");
   const navigate = useNavigate();
 
   useEffect(() => {
+    alert("Fetching menu data..."); // 2. بداية جلب البيانات
+
     const fetchMenu = async () => {
       try {
         const { data, error } = await supabase
@@ -25,11 +31,15 @@ const MenuCards = () => {
           .order('created_at', { ascending: false });
 
         if (error) throw error;
+
+        alert("Data fetched successfully"); // 3. عند نجاح جلب البيانات
         setMenuItems(data);
       } catch (err) {
+        alert("Fetch error: " + err.message); // 4. عند حدوث خطأ في الجلب
         setError(err.message);
       } finally {
         setLoading(false);
+        alert("Fetching complete"); // 5. عند الانتهاء من جلب البيانات
       }
     };
 
@@ -37,6 +47,8 @@ const MenuCards = () => {
   }, []);
 
   const handleDelete = async (id) => {
+    alert("Deleting menu item with ID: " + id); // 6. عند الضغط على حذف
+
     if (!window.confirm('Are you sure you want to delete this menu?')) return;
 
     try {
@@ -46,18 +58,31 @@ const MenuCards = () => {
         .eq('id', id);
 
       if (error) throw error;
+
+      alert("Item deleted successfully"); // 7. عند نجاح الحذف
       setMenuItems(prev => prev.filter(item => item.id !== id));
     } catch (err) {
-      alert('Delete error: ' + err.message);
+      alert("Delete error: " + err.message); // 8. عند حدوث خطأ في الحذف
     }
   };
 
   const handleEdit = (item) => {
+    alert("Editing item: " + JSON.stringify(item)); // 9. عند الضغط على تعديل
     setSelectedItem(item);
+    setDialogMode("edit");
+    setDialogOpen(true);
+  };
+
+  const handleAdd = () => {
+    alert("Opening Add Dialog"); // 10. عند الضغط على إضافة
+    setSelectedItem(null);
+    setDialogMode("add");
     setDialogOpen(true);
   };
 
   const handleUpdate = async (updatedItem) => {
+    alert("Updating item: " + JSON.stringify(updatedItem)); // 11. عند بدء التحديث
+
     try {
       const { error } = await supabase
         .from('menu')
@@ -65,16 +90,19 @@ const MenuCards = () => {
         .eq('id', selectedItem.id);
 
       if (error) throw error;
+
+      alert("Item updated successfully"); // 12. عند نجاح التحديث
       setMenuItems(prev => 
         prev.map(item => item.id === selectedItem.id ? {...item, ...updatedItem} : item)
       );
       setDialogOpen(false);
     } catch (err) {
-      alert('Update error: ' + err.message);
+      alert("Update error: " + err.message); // 13. عند حدوث خطأ في التحديث
     }
   };
 
   const handleViewMenu = (name) => {
+    alert("Navigating to menu: " + name); // 14. عند الضغط على زر العرض
     navigate(`/${name.replace(/\s+/g, '-')}`);
   };
 
@@ -95,12 +123,12 @@ const MenuCards = () => {
           menuItems.map((item) => (
             <div className="menu-card" key={item.id}>
               <div className="card-actions">
-                {/*<button 
+                <button 
                   className="action-btn edit-btn"
                   onClick={() => handleEdit(item)}
                 >
                   <EditIcon fontSize="small" />
-                </button>*/}
+                </button>
                 <button 
                   className="action-btn delete-btn"
                   onClick={() => handleDelete(item.id)}
@@ -127,12 +155,26 @@ const MenuCards = () => {
         )}
       </div>
 
+      {/* زر الإضافة العائم */}
+      <Button
+        className="xdialog-floating-btn"
+        variant="contained"
+        onClick={handleAdd}
+      >
+        <AddIcon className="xdialog-plus-icon" />
+      </Button>
+
+      {/* الديالوج */}
       <XDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
-        onSave={handleUpdate}
+        onSave={dialogMode === "edit" ? handleUpdate : (newItem) => {
+          alert("Adding new item: " + JSON.stringify(newItem)); // 15. عند إضافة عنصر جديد
+          setMenuItems(prev => [newItem, ...prev]);
+          setDialogOpen(false);
+        }}
         initialData={selectedItem}
-        mode="edit"
+        mode={dialogMode}
       />
     </>
   );
