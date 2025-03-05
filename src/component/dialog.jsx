@@ -13,6 +13,7 @@ import "./dialog.css";
 
 export default function XDialog({ open, onClose, onSave, initialData, mode = "add" }) {
   const [name, setName] = useState(initialData?.name || "");
+  const [phone, setPhone] = useState(initialData?.phone || ""); // إضافة رقم الهاتف
   const [imageFiles, setImageFiles] = useState([]);
   const [imageUrls, setImageUrls] = useState(initialData?.image_urls || []);
   const [loading, setLoading] = useState(false);
@@ -20,6 +21,7 @@ export default function XDialog({ open, onClose, onSave, initialData, mode = "ad
   useEffect(() => {
     if (initialData) {
       setName(initialData.name);
+      setPhone(initialData.phone || ""); // تحميل رقم الهاتف إذا كان موجودًا
       setImageUrls(initialData.image_urls || []);
     }
   }, [initialData]);
@@ -64,7 +66,8 @@ export default function XDialog({ open, onClose, onSave, initialData, mode = "ad
 
       const updatedItem = { 
         name, 
-        image_urls: newImageUrls.filter(url => url) // Remove any undefined/null values
+        phone, // إضافة رقم الهاتف إلى البيانات المرسلة
+        image_urls: newImageUrls.filter(url => url) 
       };
 
       if (mode === "add") {
@@ -74,6 +77,7 @@ export default function XDialog({ open, onClose, onSave, initialData, mode = "ad
       }
 
       setName("");
+      setPhone(""); // تصفير الحقل بعد الإرسال
       setImageFiles([]);
       setImageUrls([]);
       onClose();
@@ -82,18 +86,6 @@ export default function XDialog({ open, onClose, onSave, initialData, mode = "ad
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleRemoveImage = (index) => {
-    const newUrls = [...imageUrls];
-    newUrls.splice(index, 1);
-    setImageUrls(newUrls);
-  };
-
-  const handleRemoveFile = (index) => {
-    const newFiles = [...imageFiles];
-    newFiles.splice(index, 1);
-    setImageFiles(newFiles);
   };
 
   return (
@@ -114,6 +106,16 @@ export default function XDialog({ open, onClose, onSave, initialData, mode = "ad
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="xdialog-input"
+            required
+          />
+
+          <TextField
+            fullWidth
+            placeholder="Phone Number"
+            variant="filled"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className="xdialog-input phone-input"
             required
           />
 
@@ -148,7 +150,7 @@ export default function XDialog({ open, onClose, onSave, initialData, mode = "ad
                 />
                 <button 
                   className="remove-image-btn"
-                  onClick={() => handleRemoveImage(index)}
+                  onClick={() => setImageUrls(imageUrls.filter((_, i) => i !== index))}
                 >
                   <CloseIcon fontSize="small" />
                 </button>
@@ -164,7 +166,7 @@ export default function XDialog({ open, onClose, onSave, initialData, mode = "ad
                 />
                 <button 
                   className="remove-image-btn"
-                  onClick={() => handleRemoveFile(index)}
+                  onClick={() => setImageFiles(imageFiles.filter((_, i) => i !== index))}
                 >
                   <CloseIcon fontSize="small" />
                 </button>
