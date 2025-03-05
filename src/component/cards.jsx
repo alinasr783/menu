@@ -55,7 +55,7 @@ const MenuCards = () => {
       if (error) throw error;
 
 
-        etMenuItems(prev => prev.filter(item => item.id !== id));
+        setMenuItems(prev => prev.filter(item => item.id !== id));
     } catch (err) {
       alert("Delete error: " + err.message); // 8. عند حدوث خطأ في الحذف
     }
