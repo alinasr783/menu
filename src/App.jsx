@@ -47,9 +47,7 @@ function App() {
         <Route
           path="/menu/:id"
           element={
-            <PrivateRoute>
               <RestaurantPage />
-            </PrivateRoute>
           }
         />
 
