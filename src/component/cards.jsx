@@ -10,7 +10,6 @@ import XDialog from './dialog';
 import './cards.css';
 
 const MenuCards = () => {
-
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,7 +19,6 @@ const MenuCards = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-
     const fetchMenu = async () => {
       try {
         const { data, error } = await supabase
@@ -32,7 +30,7 @@ const MenuCards = () => {
 
         setMenuItems(data);
       } catch (err) {
-        alert("Fetch error: " + err.message); // 4. عند حدوث خطأ في الجلب
+        alert("Fetch error: " + err.message);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -43,7 +41,6 @@ const MenuCards = () => {
   }, []);
 
   const handleDelete = async (id) => {
-
     if (!window.confirm('Are you sure you want to delete this menu?')) return;
 
     try {
@@ -54,15 +51,13 @@ const MenuCards = () => {
 
       if (error) throw error;
 
-
-        setMenuItems(prev => prev.filter(item => item.id !== id));
+      setMenuItems(prev => prev.filter(item => item.id !== id));
     } catch (err) {
-      alert("Delete error: " + err.message); // 8. عند حدوث خطأ في الحذف
+      alert("Delete error: " + err.message);
     }
   };
 
   const handleEdit = (item) => {
-
     setSelectedItem(item);
     setDialogMode("edit");
     setDialogOpen(true);
@@ -75,7 +70,6 @@ const MenuCards = () => {
   };
 
   const handleUpdate = async (updatedItem) => {
-
     try {
       const { error } = await supabase
         .from('menu')
@@ -84,17 +78,17 @@ const MenuCards = () => {
 
       if (error) throw error;
 
-
-        setMenuItems(prev => 
+      setMenuItems(prev => 
         prev.map(item => item.id === selectedItem.id ? {...item, ...updatedItem} : item)
       );
       setDialogOpen(false);
     } catch (err) {
+      alert("Update error: " + err.message);
     }
   };
 
-  const handleViewMenu = (name) => {
-    navigate(`/${name.replace(/\s+/g, '-')}`);
+  const handleViewMenu = (id) => {
+    navigate(`/menu/${id}`);
   };
 
   if (error) return <div className="menu-error">Error: {error}</div>;
@@ -135,7 +129,7 @@ const MenuCards = () => {
                 <h3 className="card-title">{item.name}</h3>
                 <button 
                   className="card-button"
-                  onClick={() => handleViewMenu(item.name)}
+                  onClick={() => handleViewMenu(item.id)}
                 >
                   View Menu
                   <span className="button-arrow">→</span>

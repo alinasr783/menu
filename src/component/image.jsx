@@ -6,7 +6,7 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import './image.css';
 
 const RestaurantPage = () => {
-  const { restaurantName } = useParams();
+  const { id } = useParams();
   const [imageUrls, setImageUrls] = useState([]);
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(true);
@@ -15,12 +15,10 @@ const RestaurantPage = () => {
   useEffect(() => {
     const fetchRestaurant = async () => {
       try {
-        const originalName = restaurantName.replace(/-/g, ' ');
-
         const { data, error } = await supabase
           .from('menu')
-          .select('image_urls, phone')
-          .eq('name', originalName)
+          .select('image_urls, phone, name')
+          .eq('id', id)
           .single();
 
         if (error) throw error;
@@ -36,7 +34,7 @@ const RestaurantPage = () => {
     };
 
     fetchRestaurant();
-  }, [restaurantName]);
+  }, [id]);
 
   if (loading) return <div className="loading">Loading...</div>;
   if (error) return <div className="error">Error: {error}</div>;
@@ -48,7 +46,7 @@ const RestaurantPage = () => {
           <img 
             src={url}
             key={index}
-            alt={restaurantName} 
+            alt={`Menu item ${index + 1}`} 
             className="restaurant-image"
           />
         ))}
