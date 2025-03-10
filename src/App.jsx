@@ -47,9 +47,7 @@ function App() {
         <Route
           path="/:restaurantName"
           element={
-            <PrivateRoute>
               <RestaurantPage />
-            </PrivateRoute>
           }
         />
 
